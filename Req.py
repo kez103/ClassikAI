@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup as bs
 
 base = 'http://search.ruscorpora.ru/'
 page = 'search.xml?env=alpha&mode=poetic&sort=gr_created_&text=meta&doc_author=%C0.%20%D1.%20%CF%F3%F8%EA%E8%ED&p=0'
+author = 'Пушкин'
+
 poem_links = list()
 
 url = base + page
@@ -35,12 +37,8 @@ def get_poem(html_text):  #  Печатает стих построчно. Пр�
     
     poem_dict = {"content": ""}
     soup = bs(html_text, features="html.parser")
-
     uls = soup.find_all('li')
-
     lis = [li for ul in uls for li in ul.findAll('li')]
-
-    out_line = ''
 
     for poem_str in str(lis).split('<br/>'):
         soup_str = bs(poem_str, features="html.parser")
@@ -54,6 +52,15 @@ def get_poem(html_text):  #  Печатает стих построчно. Пр�
 
 def get_title(html_text):
 
+    title_dict = {"title": ""}
+    soup = bs(html_text, features="html.parser")
+    for link in soup.find_all('span', {'class', 'snippet-title'}):
+        # print(link.contents[0] + ' ', end = '')
+        title_span = str(link.contents[0])
+        authind = title_span.find(author)
+        year = title_span.find(' (1')
+        title_dict["title"] += title_span[authind + len(author) + 2:year]
+    return title_dict
 
 s = next_page(resp.text)
 # print(s)
@@ -61,17 +68,18 @@ s = next_page(resp.text)
 # s = 'search.xml?env=alpha&mode=poetic&nodia=1&expand=full&docid=12313&sid=0'
 url = base + s
 resp = r.get(url)
-
+s = next_page(resp.text)
+url = base + s
+resp = r.get(url)
 # get_poem_list(resp.text)
 # print(get_poem_list(resp.text)[0])
-
 for poem_link in get_poem_list(resp.text):   
     url = base + poem_link
     resp = r.get(url)
-    print(get_poem(resp.text))
+    print(get_title(resp.text))
+    # print(resp.text)
     break
 
-print(js().encode({"foo": ["bar", "baz"]}))
 # search.xml?env=alpha&mode=poetic&nodia=1&expand=full&docid=12313&sid=0
 #
 #
